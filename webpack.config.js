@@ -59,10 +59,16 @@ module.exports = function (env = {}) {
             extensions: ['.jsx', '.js', '.styl'],
         },
         devServer: {
-            contentBase: path.resolve('./dist'),
+            contentBase: path.resolve('./pages'),
             port: 4000,
             inline: true,
             overlay: true,
+            proxy: {
+                '/api': {
+                    target: 'http://localhost',
+                    secure: false,
+                },
+            },
         },
         plugins,
     };
