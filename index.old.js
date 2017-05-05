@@ -1,3 +1,5 @@
+/* eslint-disable */
+
 var Router = require('unpm-router')
 var auth = require('unpm-auth')
 var http = require('http')
