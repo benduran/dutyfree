@@ -1,0 +1,60 @@
+{
+  "name": "dutyfree",
+  "version": "1.0.0",
+  "description": "Inspired by Michael Hayes' 'unpm', this is a modern, lightweight, private npm registry with a clean UI.",
+  "main": "./index.js",
+  "scripts": {},
+  "author": "Benjamin Duran",
+  "dependencies": {
+    "compression": "^1.6.2",
+    "cors": "^2.8.3",
+    "express": "^4.15.2",
+    "minimist": "^1.2.0"
+  },
+  "engines": {
+    "node": ">=7"
+  },
+  "license": "MIT",
+  "devDependencies": {
+    "autoprefixer": "^6.7.7",
+    "babel-core": "^6.24.1",
+    "babel-eslint": "^7.2.3",
+    "babel-loader": "^7.0.0",
+    "babel-preset-latest": "^6.24.1",
+    "babel-preset-react": "^6.24.1",
+    "babel-preset-stage-1": "^6.24.1",
+    "eslint": "^3.19.0",
+    "eslint-config-airbnb": "^14.1.0",
+    "eslint-plugin-import": "^2.2.0",
+    "eslint-plugin-jsx-a11y": "^4.0.0",
+    "eslint-plugin-react": "^6.10.3",
+    "postcss-loader": "^1.3.3",
+    "react": "^15.5.4",
+    "react-dom": "^15.5.4",
+    "react-redux": "^5.0.4",
+    "redux": "^3.6.0",
+    "stylus": "^0.54.5",
+    "stylus-loader": "^3.0.1",
+    "url-loader": "^0.5.8",
+    "webpack": "^2.5.0",
+    "webpack-dev-server": "^2.4.5"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/benduran/dutyfree.git"
+  },
+  "keywords": [
+    "npm",
+    "private",
+    "registry",
+    "fnpm",
+    "package",
+    "manager",
+    "dutyfree",
+    "easy"
+  ],
+  "bugs": {
+    "url": "https://github.com/benduran/dutyfree/issues"
+  },
+  "homepage": "https://github.com/benduran/dutyfree"
+}

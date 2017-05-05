@@ -1,0 +1,84 @@
+extends: airbnb
+env:
+  shared-node-browser: true
+  es6: true
+  browser: true
+  node: true
+plugins:
+  - react
+  - jsx-a11y
+  - import
+globals:
+  $: true
+  describe: true
+  it: true
+  expect: true
+  beforeEach: true
+  afterEach: true
+parser: babel-eslint
+rules:
+  arrow-body-style:
+    - off
+  linebreak-style:
+    - off
+  max-len:
+    - error
+    - 200
+  one-var:
+    - off
+  indent:
+    - error
+    - 4
+    - SwitchCase: 1
+  object-curly-spacing:
+    - off
+  func-names:
+    - off
+  import/prefer-default-export:
+    - off
+  brace-style:
+    - error
+    - stroustrup
+  import/no-extraneous-dependencies:
+    - off
+  import/extensions:
+    - off
+  import/no-unresolved:
+    - off
+  no-underscore-dangle:
+    - off
+  no-plusplus:
+    - off
+  no-case-declarations:
+    - warn
+  class-methods-use-this:
+    - off
+  react/sort-prop-types: 0
+  react/jsx-closing-bracket-location: 0
+  react/jsx-no-literals: 0
+  react/require-optimization: 0
+  react/forbid-prop-types:
+      - error
+      - forbid:
+          - any
+  react/jsx-sort-props:
+      - off
+  react/jsx-max-props-per-line:
+      - warn
+      - maximum: 5
+  react/jsx-filename-extension:
+      - warn
+  react/no-danger:
+      - warn
+  react/no-set-state:
+      - warn
+  react/jsx-no-bind:
+      - off
+  react/sort-comp:
+      - off
+  react/jsx-indent:
+    - error
+    - 4
+  react/jsx-indent-props:
+    - error
+    - 4
