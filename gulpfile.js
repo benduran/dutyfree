@@ -101,3 +101,4 @@ gulp.task('build:client', () => {
 gulp.task('default', ['build:client']);
 gulp.task('build:launch', ['default', 'launchserver']);
 gulp.task('dev', ['devserver', 'launchserver', 'watch']);
+gulp.task('watchserver', ['launchserver', 'watch']);

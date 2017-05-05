@@ -1,10 +1,12 @@
 
 const {Router} = require('express');
 
-const metadata = require('./metadata');
+const app = require('./app');
+const npm = require('./npm');
 
 module.exports = function () {
     const router = new Router();
-    metadata.bind(router);
+    app.bind(router);
+    npm.bind(router);
     return router;
 };
