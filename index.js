@@ -24,12 +24,12 @@ function setup(options = {}) {
         },
     }));
     server.use(routes());
-    server.use(express.static(path.join(__dirname, '/pages', {
+    server.use(express.static(path.join(__dirname, '/pages'), {
         maxAge: staticMaxAge,
-    })));
-    server.use(express.static(path.join(__dirname, '/dist', {
-        maxAge: STATIC_MAX_AGE,
-    })));
+    }));
+    server.use(express.static(path.join(__dirname, '/dist'), {
+        maxAge: staticMaxAge,
+    }));
     return server;
 }
 
@@ -45,5 +45,7 @@ if (!module.parent) {
     const serverInstance = setup({
         staticMaxAge,
     });
-    serverInstance.listen(port, host);
+    serverInstance.listen(port, host, () => {
+        console.info(`App server listening for connections on host ${host} via port ${port}`); // eslint-disable-line
+    });
 }

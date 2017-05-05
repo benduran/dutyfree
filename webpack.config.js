@@ -40,6 +40,7 @@ module.exports = function (env = {}) {
                 use: [
                     'style-loader',
                     'css-loader', {
+                        loader: 'postcss-loader',
                         options: {
                             plugins: () => {
                                 return [
@@ -53,6 +54,9 @@ module.exports = function (env = {}) {
                     'stylus-loader',
                 ],
             }],
+        },
+        resolve: {
+            extensions: ['.jsx', '.js', '.styl'],
         },
         devServer: {
             contentBase: path.resolve('./dist'),
