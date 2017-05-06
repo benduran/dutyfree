@@ -3,7 +3,7 @@ const path = require('path');
 
 const fs = require('fs-extra');
 
-const {encryptString} = require('../utils');
+const {getSalt, getHash} = require('../utils');
 
 const DEFAULT_MAX_AGE = 1000 * 60 * 5; // Cache for 5 minutes
 const DEFAULT_USERS_PATH = path.join(__dirname, '../__data/users.json');
@@ -88,9 +88,14 @@ class FileSystemBackend {
     }
     async createUser(user) {
         await this.syncUsers();
-        this._users = this._users.concat(Object.assign({}, user, {
-            password: await encryptString(user.password),
-        }));
+        const salt = await getSalt();
+        this._users = this._users.concat({
+            name: user.name,
+            email: user.email,
+            password_hash: await getHash(user.password, salt),
+            date: user.date,
+            salt,
+        });
         await this._writeFile(this.usersPath, JSON.stringify(this._users));
     }
 }

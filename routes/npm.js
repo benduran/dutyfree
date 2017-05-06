@@ -1,4 +1,6 @@
 
+const {pick} = require('lodash');
+
 function publish(req, res) {
     res.send('publish');
 }
@@ -23,8 +25,17 @@ function unpublishTarball(req, res) {
     res.send('unpublish tarball...');
 }
 
-function getUser(req, res) {
-    res.send('getting user...');
+async function getUser(req, res) {
+    const {params} = req;
+    // 0 param should be the user's name
+    const name = params[0];
+    const user = await req.dutyfree.getUser(name);
+    if (!user) {
+        res.status(404).end();
+    }
+    else {
+        res.json(pick(user, ['name', 'email', 'date']));
+    }
 }
 
 function updateUser(req, res) {

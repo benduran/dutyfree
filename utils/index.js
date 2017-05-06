@@ -1,25 +1,34 @@
 
 const bcrypt = require('bcryptjs');
 
-exports.encryptString = function (str) {
+exports.getSalt = function (rounds = 10) {
     return new Promise((resolve, reject) => {
-        if (!str) {
-            reject(new Error('No strin was provided to encrypt.'));
-        }
-        bcrypt.genSalt(10, (error, salt) => {
+        bcrypt.genSalt(rounds, (error, salt) => {
             if (error) {
                 reject(error);
             }
             else {
-                bcrypt.hash(str, salt, (error2, hash) => {
-                    if (error2) {
-                        reject(error2);
-                    }
-                    else {
-                        resolve(hash);
-                    }
-                });
+                resolve(salt);
             }
         });
     });
+};
+
+exports.getHash = function (str, salt) {
+    return new Promise((resolve, reject) => {
+        bcrypt.hash(str, salt, (error, hash) => {
+            if (error) {
+                reject(error);
+            }
+            else {
+                resolve(hash);
+            }
+        });
+    });
+};
+
+exports.encryptString = async function (str) {
+    const salt = await exports.getSalt();
+    const hash = await exports.getHash(str, salt);
+    return hash;
 };
