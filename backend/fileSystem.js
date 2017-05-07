@@ -64,6 +64,39 @@ class FileSystemBackend {
             });
         });
     }
+    _getPackageFilename(name, version) {
+        return `${name}-${version}.tgz`;
+    }
+    async syncMetadata() {
+        if (!this._lastMetadataAccessTime || Date.now() - this._lastMetadataAccessTime > this.maxAge) {
+            this._metadata = await this._readFile(this.metadataPath) || {};
+            this._lastMetadataAccessTime = Date.now();
+        }
+    }
+    async getPackagesForName(name) {
+        await this.syncMetadata();
+        return this._metadata[name];
+    }
+    async getPackageVersion(name, version) {
+        const packagesForName = await this.getPackagesForName(name);
+        return packagesForName ? packagesForName.versions[version] : null;
+    }
+    async publishPackage(metadataToPublish) {
+        // If the request has gotten this far, then conflicts were already checked and we can continue publishing
+        await this.syncMetadata();
+        const flushableMetadata = {};
+        Object.keys(metadataToPublish).filter((key) => {
+            return key !== '_attachments';
+        }).forEach((prop) => {
+            flushableMetadata[prop] = metadataToPublish[prop];
+        });
+        this._metadata[metadataToPublish.name] = metadataToPublish;
+        await this._writeFile(this.metadataPath, JSON.stringify(this._metadata));
+        const tarballNameToWrite = this._getPackageFilename(metadataToPublish.name, metadataToPublish['dist-tags'].latest);
+        await this._writeFile(path.join(this.tarballDir, tarballNameToWrite),
+            new Buffer(metadataToPublish._attachments[tarballNameToWrite].data, 'base64'));
+        return flushableMetadata;
+    }
     async syncUsers() {
         if (!this._lastUsersAccessTime || Date.now() - this._lastUsersAccessTime > this.maxAge) {
             this._users = await this._readFile(this.usersPath) || [];

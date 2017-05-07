@@ -1,8 +1,33 @@
 
 const {pick} = require('lodash');
 
-function publish(req, res) {
-    res.send('publish');
+function getRequestAuth(headers) {
+    return new Buffer(headers.authorization.split(' ')[1], 'base64').toString('utf8').split(':')[1];
+}
+
+async function publish(req, res) {
+    // TODO: Before allowing somebody to publish, we should check to see which packages they are *allowed* to actually publish
+    try {
+        // Check for package version collisions
+        const reqPackageMetadata = req.body || {};
+        const packageAndVersionExists = await req.dutyfree.getPackageVersion(reqPackageMetadata.name, reqPackageMetadata['dist-tags'].latest) !== null;
+        if (packageAndVersionExists) {
+            res.status(409).json({
+                error: 'conflict',
+                reason: 'Document update conflict.',
+            });
+        }
+        else {
+            // Continue with the publish
+            const publishedMetadata = await req.dutyfree.publishPackage(reqPackageMetadata);
+            res.status(201).json(publishedMetadata);
+        }
+    }
+    catch (error) {
+        res.status(500).json({
+            error: error.message || error,
+        });
+    }
 }
 
 function getTarball(req, res) {
@@ -43,7 +68,7 @@ async function updateUser(req, res) {
         const {body: updatedUserObj} = req;
         const {params} = req;
         const name = params[0];
-        const password = new Buffer(req.headers.authorization.split(' ')[1], 'base64').toString('utf8').split(':')[1];
+        const password = getRequestAuth(req.headers);
         const authedUser = await req.dutyfree.authorizeUser(name, password);
         if (!authedUser) {
             res.status(401).end();
