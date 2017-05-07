@@ -38,8 +38,26 @@ async function getUser(req, res) {
     }
 }
 
-function updateUser(req, res) {
-    res.send('updating user...');
+async function updateUser(req, res) {
+    try {
+        const {body: updatedUserObj} = req;
+        const {params} = req;
+        const name = params[0];
+        const password = new Buffer(req.headers.authorization.split(' ')[1], 'base64').toString('utf8').split(':')[1];
+        const authedUser = await req.dutyfree.authorizeUser(name, password);
+        if (!authedUser) {
+            res.status(401).end();
+        }
+        else {
+            await req.dutyfree.updateUser(name, updatedUserObj);
+            res.status(201).json(updatedUserObj);
+        }
+    }
+    catch (error) {
+        res.status(500).json({
+            error: error.message || error,
+        });
+    }
 }
 
 async function registerUser(req, res) {
@@ -60,22 +78,25 @@ async function registerUser(req, res) {
         }
     }
     catch (error) {
-        res.status(500).json({error});
+        res.status(500).json({
+            error: error.message || error,
+        });
     }
 }
 
+// More specific routes need to come BEFORE less specific ones
 exports.bind = function (router) {
     router
-    .route('/:name')
-    .put(publish);
+    .route('/:name/:version?')
+    .get(getPackage);
 
     router
     .route('/:name/-/:name/:version.tgz')
     .get(getTarball);
 
     router
-    .route('/:name/:version?')
-    .get(getPackage);
+    .route('/:name')
+    .put(publish);
 
     router
     .route('/:name/-rev/:rev?')
@@ -87,11 +108,11 @@ exports.bind = function (router) {
     .delete(unpublishTarball);
 
     router
+    .route('/-/user/org.couchdb.user:*/*/*')
+    .put(updateUser);
+
+    router
     .route('/-/user/org.couchdb.user:*')
     .get(getUser)
     .put(registerUser);
-
-    router
-    .route('/-/user/org.couchdb.user:*/*/*')
-    .put(updateUser);
 };

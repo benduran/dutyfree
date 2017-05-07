@@ -3,7 +3,7 @@ const path = require('path');
 
 const fs = require('fs-extra');
 
-const {getSalt, getHash} = require('../utils');
+const {encryptString, verifyHash} = require('../utils');
 
 const DEFAULT_MAX_AGE = 1000 * 60 * 5; // Cache for 5 minutes
 const DEFAULT_USERS_PATH = path.join(__dirname, '../__data/users.json');
@@ -88,15 +88,38 @@ class FileSystemBackend {
     }
     async createUser(user) {
         await this.syncUsers();
-        const salt = await getSalt();
         this._users = this._users.concat({
             name: user.name,
             email: user.email,
-            password_hash: await getHash(user.password, salt),
+            password: await encryptString(user.password),
             date: user.date,
-            salt,
         });
         await this._writeFile(this.usersPath, JSON.stringify(this._users));
+    }
+    async updateUser(username, updateObj) {
+        await this.syncUsers();
+        const existingUser = await this.getUser(username);
+        let existingUserIndex = null;
+        for (let i = 0; i < this._users.length; i++) {
+            const u = this._users[i];
+            if (u.name === username) {
+                existingUserIndex = i;
+                break;
+            }
+        }
+        if (existingUserIndex !== null) {
+            this._users[existingUserIndex] = Object.assign({}, existingUser, updateObj);
+            await this._writeFile(this.usersPath, JSON.stringify(this._users));
+        }
+    }
+    async authorizeUser(username, password) {
+        await this.syncUsers();
+        const user = await this.getUser(username);
+        if (!user) {
+            return null;
+        }
+        const passGood = await verifyHash(password, user.password);
+        return passGood ? user : null;
     }
 }
 

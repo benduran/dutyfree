@@ -32,3 +32,24 @@ exports.encryptString = async function (str) {
     const hash = await exports.getHash(str, salt);
     return hash;
 };
+
+exports.verifyHash = function (input, hash) {
+    return new Promise((resolve, reject) => {
+        if (!input) {
+            reject(new Error('No input was provided when verifying hash.'));
+        }
+        else if (!hash) {
+            reject(new Error('Saved hash is required when verifying hash.'));
+        }
+        else {
+            bcrypt.compare(input, hash, (error, good) => {
+                if (error) {
+                    reject(error);
+                }
+                else {
+                    resolve(good);
+                }
+            });
+        }
+    });
+};
