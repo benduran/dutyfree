@@ -79,7 +79,7 @@ class FileSystemBackend {
     }
     async getPackageVersion(name, version) {
         const packagesForName = await this.getPackagesForName(name);
-        return packagesForName ? packagesForName.versions[version] : null;
+        return packagesForName ? packagesForName.versions[version] || null : null;
     }
     async publishPackage(metadataToPublish) {
         // If the request has gotten this far, then conflicts were already checked and we can continue publishing
@@ -90,7 +90,7 @@ class FileSystemBackend {
         }).forEach((prop) => {
             flushableMetadata[prop] = metadataToPublish[prop];
         });
-        this._metadata[metadataToPublish.name] = metadataToPublish;
+        this._metadata[metadataToPublish.name] = flushableMetadata;
         await this._writeFile(this.metadataPath, JSON.stringify(this._metadata));
         const tarballNameToWrite = this._getPackageFilename(metadataToPublish.name, metadataToPublish['dist-tags'].latest);
         await this._writeFile(path.join(this.tarballDir, tarballNameToWrite),

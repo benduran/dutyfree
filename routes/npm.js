@@ -31,11 +31,21 @@ async function publish(req, res) {
 }
 
 function getTarball(req, res) {
+    console.info('touching my peen');
     res.send('getting tarball...');
 }
 
-function getPackage(req, res) {
-    res.send('getting package...');
+async function getPackage(req, res) {
+    const {name, version} = req.params;
+    const packageNameMatch = await req.dutyfree.getPackagesForName(name);
+    if (packageNameMatch) {
+        // We got a package version match
+        // This query should hopefully return the URL to the tarball for the package
+        res.status(200).json(packageNameMatch);
+    }
+    else {
+        res.status(404).end();
+    }
 }
 
 function unpublishSpecific(req, res) {
@@ -112,21 +122,8 @@ async function registerUser(req, res) {
 // More specific routes need to come BEFORE less specific ones
 exports.bind = function (router) {
     router
-    .route('/:name/:version?')
-    .get(getPackage);
-
-    router
     .route('/:name/-/:name/:version.tgz')
     .get(getTarball);
-
-    router
-    .route('/:name')
-    .put(publish);
-
-    router
-    .route('/:name/-rev/:rev?')
-    .put(unpublishSpecific)
-    .delete(unpublishAll);
 
     router
     .route('/:name/-/:file/-rev/:rev')
@@ -140,4 +137,17 @@ exports.bind = function (router) {
     .route('/-/user/org.couchdb.user:*')
     .get(getUser)
     .put(registerUser);
+
+    router
+    .route('/:name/:version?')
+    .get(getPackage);
+
+    router
+    .route('/:name')
+    .put(publish);
+
+    router
+    .route('/:name/-rev/:rev?')
+    .put(unpublishSpecific)
+    .delete(unpublishAll);
 };
