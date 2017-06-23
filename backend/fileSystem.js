@@ -23,14 +23,14 @@ class FileSystemBackend {
         this._metadata = null;
         this._lastMetadataAccessTime = null;
     }
-    _readFile(filePath, isJSON = true) {
+    _readFile(filePath, isJSON = true, encoding = 'utf8') {
         return new Promise((resolve, reject) => {
             fs.exists(filePath, (exists) => {
                 if (!exists) {
                     resolve(null);
                 }
                 else {
-                    fs.readFile(filePath, 'utf8', (error, contents) => {
+                    fs.readFile(filePath, encoding, (error, contents) => {
                         if (error) {
                             reject(error);
                         }
@@ -96,6 +96,9 @@ class FileSystemBackend {
         await this._writeFile(path.join(this.tarballDir, tarballNameToWrite),
             new Buffer(metadataToPublish._attachments[tarballNameToWrite].data, 'base64'));
         return flushableMetadata;
+    }
+    getPackageStream(name, version) {
+        return fs.createReadStream(path.join(this.tarballDir, `${name}-${version}.tgz`));
     }
     async syncUsers() {
         if (!this._lastUsersAccessTime || Date.now() - this._lastUsersAccessTime > this.maxAge) {

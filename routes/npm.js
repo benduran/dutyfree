@@ -31,17 +31,33 @@ async function publish(req, res) {
 }
 
 function getTarball(req, res) {
-    console.info('touching my peen');
-    res.send('getting tarball...');
+    const {name, version} = req.params;
+    const fileStream = req.dutyfree.getPackageStream(name, version);
+    fileStream.once('data', () => {
+        fileStream.pipe(res);
+    });
+    fileStream.once('finish', () => {
+        res.end();
+    });
 }
 
 async function getPackage(req, res) {
     const {name, version} = req.params;
-    const packageNameMatch = await req.dutyfree.getPackagesForName(name);
-    if (packageNameMatch) {
+    const packageMatch = await req.dutyfree.getPackagesForName(name);
+    const encodedName = encodeURIComponent(name);
+    if (packageMatch) {
+        // If no version was specified in the route params, then we need to loop over every-single version and map a tarball URL
+        if (!version) {
+            Object.keys(packageMatch.versions).forEach((localVersion) => {
+                packageMatch.versions[localVersion].dist.tarball = `${req.protocol}://${req.hostname}/${encodedName}/-/${encodedName}/${localVersion}.tgz`;
+            });
+        }
+        else {
+            packageMatch.versions[version].dist.tarball = `${req.protocol}://${req.hostname}/${encodedName}/-/${encodedName}/${version}.tgz`;
+        }
         // We got a package version match
         // This query should hopefully return the URL to the tarball for the package
-        res.status(200).json(packageNameMatch);
+        res.status(200).json(packageMatch);
     }
     else {
         res.status(404).end();
