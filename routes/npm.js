@@ -53,6 +53,9 @@ async function getPackage(req, res) {
         if (!version) {
             Object.keys(packageMatch.versions).forEach((localVersion) => {
                 packageMatch.versions[localVersion].dist.tarball = `${req.protocol}://${req.hostname}/${encodedName}/-/${encodedName}/${localVersion}.tgz`;
+                if (!packageMatch.versions[localVersion]._id) {
+                    packageMatch.versions[localVersion]._id = `${encodedName}@${localVersion}`;
+                }
             });
         }
         else {

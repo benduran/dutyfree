@@ -90,7 +90,14 @@ class FileSystemBackend {
         }).forEach((prop) => {
             flushableMetadata[prop] = metadataToPublish[prop];
         });
-        this._metadata[metadataToPublish.name].versions[metadataToPublish['dist-tags'].latest] = flushableMetadata.versions[flushableMetadata['dist-tags'].latest];
+        const versionToPublish = metadataToPublish['dist-tags'].latest;
+        if (!this._metadata[metadataToPublish.name]) {
+            this._metadata[metadataToPublish.name] = {};
+        }
+        if (!this._metadata[metadataToPublish.name].versions) {
+            this._metadata[metadataToPublish.name].versions = {};
+        }
+        this._metadata[metadataToPublish.name].versions[versionToPublish] = flushableMetadata.versions[versionToPublish];
         await this._writeFile(this.metadataPath, JSON.stringify(this._metadata));
         const tarballNameToWrite = this._getPackageFilename(metadataToPublish.name, metadataToPublish['dist-tags'].latest);
         await this._writeFile(path.join(this.tarballDir, tarballNameToWrite),
