@@ -1,6 +1,8 @@
 
 const {pick} = require('lodash');
 
+const logger = require('../logger');
+
 function getRequestAuth(headers) {
     return new Buffer(headers.authorization.split(' ')[1], 'base64').toString('utf8').split(':')[1];
 }
@@ -27,6 +29,7 @@ async function publish(req, res) {
         res.status(500).json({
             error: error.message || error,
         });
+        logger.error(error);
     }
 }
 
@@ -108,6 +111,7 @@ async function updateUser(req, res) {
         res.status(500).json({
             error: error.message || error,
         });
+        logger.error(error);
     }
 }
 
@@ -132,6 +136,7 @@ async function registerUser(req, res) {
         res.status(500).json({
             error: error.message || error,
         });
+        logger.error(error);
     }
 }
 

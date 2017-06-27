@@ -11,7 +11,8 @@ const
 const
     {BackendType} = require('./enum'),
     dutyfreeBackend = require('./backend'),
-    routes = require('./routes');
+    routes = require('./routes'),
+    logger = require('./logger');
 
 const STATIC_MAX_AGE = 1000 * 60 * 60 * 24 * 30;
 
@@ -19,7 +20,9 @@ function setup(options = {}) {
     const {
         staticMaxAge = STATIC_MAX_AGE, // Cache for 30 days by default
         backend = BackendType.FileSystem, // Can be either Number or Object / Class
+        env = 'develop',
     } = options;
+    process.env.NODE_ENV = env;
     const server = express();
     server.use(cors());
     server.use(bodyParser.json({
@@ -55,6 +58,6 @@ if (!module.parent) {
         staticMaxAge,
     });
     serverInstance.listen(port, host, () => {
-        console.info(`App server listening for connections on host ${host} via port ${port}`); // eslint-disable-line
+        logger.info(`App server listening for connections on host ${host} via port ${port}`);
     });
 }

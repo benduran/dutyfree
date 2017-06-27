@@ -8,13 +8,6 @@ plugins:
   - react
   - jsx-a11y
   - import
-globals:
-  $: true
-  describe: true
-  it: true
-  expect: true
-  beforeEach: true
-  afterEach: true
 parser: babel-eslint
 rules:
   arrow-body-style:
