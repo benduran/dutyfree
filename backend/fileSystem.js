@@ -64,11 +64,15 @@ class FileSystemBackend {
             });
         });
     }
+    getTarballStream(tarballName) {
+        return fs.createReadStream(path.join(this.tarballDir, tarballName));
+    }
     async _writeJSON(filePath, obj) {
         await this._writeFile(filePath, JSON.stringify(obj));
     }
-    getPackageStream(name, version) {
-        return fs.createReadStream(path.join(this.tarballDir, `${name}-${version}.tgz`));
+    async getTarball(tarballName) {
+        const contents = await this._readFile(path.join(this.tarballDir, tarballName), false, 'base64');
+        return contents;
     }
     async syncMetadata() {
         if (!this._lastMetadataAccessTime || Date.now() - this._lastMetadataAccessTime > this.maxAge) {

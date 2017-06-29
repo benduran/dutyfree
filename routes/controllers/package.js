@@ -69,19 +69,21 @@ async function getPackage(req, res) {
         res.status(200).json(packageMatch);
     }
     else {
+        logger.info(`${req.protocol}://${req.hostname}${req.path}`);
         res.status(404).end();
     }
 }
 
-function getTarball(req, res) {
+async function getTarball(req, res) {
     const {name, version} = req.params;
-    const fileStream = req.dutyfree.getPackageStream(name, version);
-    fileStream.once('data', () => {
-        fileStream.pipe(res);
-    });
-    fileStream.once('finish', () => {
-        res.end();
-    });
+    const contents = await req.dutyfree.getTarball(_getPackageFilename(name, version));
+    res.send(contents);
+    // const stream = req.dutyfree.getTarballStream(_getPackageFilename(name, version));
+    // stream.pipe(res);
+    // stream.once('finish', () => {
+    //     logger.info('Finished piping');
+    //     res.end();
+    // });
 }
 
 function unpublishSpecific(req, res) {
