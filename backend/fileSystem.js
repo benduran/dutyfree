@@ -64,8 +64,11 @@ class FileSystemBackend {
             });
         });
     }
-    _getPackageFilename(name, version) {
-        return `${name}-${version}.tgz`;
+    async _writeJSON(filePath, obj) {
+        await this._writeFile(filePath, JSON.stringify(obj));
+    }
+    getPackageStream(name, version) {
+        return fs.createReadStream(path.join(this.tarballDir, `${name}-${version}.tgz`));
     }
     async syncMetadata() {
         if (!this._lastMetadataAccessTime || Date.now() - this._lastMetadataAccessTime > this.maxAge) {
@@ -73,39 +76,22 @@ class FileSystemBackend {
             this._lastMetadataAccessTime = Date.now();
         }
     }
-    async getPackagesForName(name) {
+    async getPackageByName(packageName) {
         await this.syncMetadata();
-        return this._metadata[name];
+        return this._metadata[packageName];
     }
-    async getPackageVersion(name, version) {
-        const packagesForName = await this.getPackagesForName(name);
-        return packagesForName ? packagesForName.versions[version] || null : null;
+    async getPackageVersion(packageName, version) {
+        const match = await this.getPackageByName(packageName);
+        return match ? match.versions[version] : null;
     }
-    async publishPackage(metadataToPublish) {
-        // If the request has gotten this far, then conflicts were already checked and we can continue publishing
+    async publishPackage(packageName, version, metadata, tarballName, tarballBuffer) {
         await this.syncMetadata();
-        const flushableMetadata = {};
-        Object.keys(metadataToPublish).filter((key) => {
-            return key !== '_attachments';
-        }).forEach((prop) => {
-            flushableMetadata[prop] = metadataToPublish[prop];
-        });
-        const versionToPublish = metadataToPublish['dist-tags'].latest;
-        if (!this._metadata[metadataToPublish.name]) {
-            this._metadata[metadataToPublish.name] = {};
-        }
-        if (!this._metadata[metadataToPublish.name].versions) {
-            this._metadata[metadataToPublish.name].versions = {};
-        }
-        this._metadata[metadataToPublish.name].versions[versionToPublish] = flushableMetadata.versions[versionToPublish];
-        await this._writeFile(this.metadataPath, JSON.stringify(this._metadata));
-        const tarballNameToWrite = this._getPackageFilename(metadataToPublish.name, metadataToPublish['dist-tags'].latest);
-        await this._writeFile(path.join(this.tarballDir, tarballNameToWrite),
-            new Buffer(metadataToPublish._attachments[tarballNameToWrite].data, 'base64'));
-        return flushableMetadata;
-    }
-    getPackageStream(name, version) {
-        return fs.createReadStream(path.join(this.tarballDir, `${name}-${version}.tgz`));
+        const currentMetadata = this._metadata[packageName] || {};
+        const versions = currentMetadata.versions || {};
+        versions[version] = metadata;
+        this._metadata[packageName] = Object.assign({}, currentMetadata, metadata);
+        await this._writeJSON(this.metadataPath, this._metadata);
+        await this._writeFile(path.join(this.tarballDir, tarballName), tarballBuffer, 'base64');
     }
     async syncUsers() {
         if (!this._lastUsersAccessTime || Date.now() - this._lastUsersAccessTime > this.maxAge) {
