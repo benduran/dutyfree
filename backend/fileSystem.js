@@ -3,7 +3,7 @@ const path = require('path');
 
 const fs = require('fs-extra');
 
-const {encryptString, verifyHash} = require('../utils');
+const {encryptString, verifyHash} = require('../utils').encryption;
 
 const DEFAULT_MAX_AGE = 1000 * 60 * 5; // Cache for 5 minutes
 const DEFAULT_USERS_PATH = path.join(__dirname, '../__data/users.json');
@@ -65,14 +65,33 @@ class FileSystemBackend {
         });
     }
     getTarballStream(tarballName) {
-        return fs.createReadStream(path.join(this.tarballDir, tarballName));
+        return new Promise((resolve) => {
+            const tarballPath = path.join(this.tarballDir, tarballName);
+            fs.exists(tarballPath, (exists) => {
+                if (exists) {
+                    resolve(fs.createReadStream(tarballPath));
+                }
+                else {
+                    resolve(null);
+                }
+            });
+        });
     }
     async _writeJSON(filePath, obj) {
         await this._writeFile(filePath, JSON.stringify(obj));
     }
-    async getTarball(tarballName) {
-        const contents = await this._readFile(path.join(this.tarballDir, tarballName), false, 'base64');
-        return contents;
+    getTarball(tarballName) {
+        return new Promise((resolve, reject) => {
+            const tarballPath = path.join(this.tarballDir, tarballName);
+            fs.exists(tarballPath, (exists) => {
+                if (exists) {
+                    this._readFile(tarballPath, false, 'base64').then(resolve).catch(reject);
+                }
+                else {
+                    resolve(null);
+                }
+            });
+        });
     }
     async syncMetadata() {
         if (!this._lastMetadataAccessTime || Date.now() - this._lastMetadataAccessTime > this.maxAge) {

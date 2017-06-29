@@ -1,8 +1,8 @@
 
 const {omit} = require('lodash');
 
+const proxy = require('../../proxy');
 const logger = require('../../logger');
-
 
 function _getPackageFilename(name, version) {
     return `${name}-${version}.tgz`;
@@ -49,7 +49,17 @@ async function publish(req, res) {
 
 async function getPackage(req, res) {
     const {name, version} = req.params;
-    const packageMatch = await req.dutyfree.getPackageByName(name);
+    let packageMatch = await req.dutyfree.getPackageByName(name);
+    if (!packageMatch) {
+        // Try to proxy it through to public NPM registry to see if it exists there
+        const response = await proxy({
+            url: req.url,
+            registryHost: 'registry.npmjs.org',
+        });
+        if (response.ok) {
+            packageMatch = response.body;
+        }
+    }
     if (packageMatch) {
         const encodedName = encodeURIComponent(name);
         // If no version was specified in the route params, then we need to loop over every-single version and map a tarball URL
@@ -69,21 +79,44 @@ async function getPackage(req, res) {
         res.status(200).json(packageMatch);
     }
     else {
-        logger.info(`${req.protocol}://${req.hostname}${req.path}`);
         res.status(404).end();
     }
 }
 
 async function getTarball(req, res) {
-    const {name, version} = req.params;
-    const contents = await req.dutyfree.getTarball(_getPackageFilename(name, version));
-    res.send(contents);
-    // const stream = req.dutyfree.getTarballStream(_getPackageFilename(name, version));
-    // stream.pipe(res);
-    // stream.once('finish', () => {
-    //     logger.info('Finished piping');
-    //     res.end();
-    // });
+    try {
+        debugger;
+        const {name, version} = req.params;
+        let contents = await req.dutyfree.getTarball(_getPackageFilename(name, version));
+        if (!contents) {
+            // Proxy to another registry
+            const response = await proxy({
+                url: req.url,
+                registryHost: 'registry.npmjs.org',
+                parseResponse: false,
+            });
+            if (response.ok) {
+                contents = response.body;
+            }
+        }
+        if (contents) {
+            res.send(contents);
+        }
+        else {
+            res.status(404).end();
+        }
+        // const stream = req.dutyfree.getTarballStream(_getPackageFilename(name, version));
+        // stream.pipe(res);
+        // stream.once('finish', () => {
+        //     logger.info('Finished piping');
+        //     res.end();
+        // });
+    }
+    catch (error) {
+        res.status(500).json({
+            error: error.message || error,
+        });
+    }
 }
 
 function unpublishSpecific(req, res) {

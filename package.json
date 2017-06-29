@@ -11,6 +11,10 @@
     "watchserver": "gulp watchserver"
   },
   "author": "Benjamin Duran",
+  "engines": {
+    "node": ">=7"
+  },
+  "license": "MIT",
   "dependencies": {
     "bcryptjs": "^2.4.3",
     "body-parser": "^1.17.2",
@@ -22,12 +26,9 @@
     "lodash": "^4.17.4",
     "minimist": "^1.2.0",
     "moment": "^2.18.1",
+    "node-fetch": "^1.7.1",
     "winston": "^2.3.1"
   },
-  "engines": {
-    "node": ">=7"
-  },
-  "license": "MIT",
   "devDependencies": {
     "autoprefixer": "^7.1.1",
     "babel-core": "^6.25.0",
