@@ -1,6 +1,8 @@
 
 const {omit} = require('lodash');
 
+const {Writeable} = require('stream');
+
 const proxy = require('../../proxy');
 const logger = require('../../logger');
 
@@ -65,14 +67,14 @@ async function getPackage(req, res) {
         // If no version was specified in the route params, then we need to loop over every-single version and map a tarball URL
         if (!version) {
             Object.keys(packageMatch.versions).forEach((localVersion) => {
-                packageMatch.versions[localVersion].dist.tarball = `${req.protocol}://${req.hostname}/${encodedName}/-/${encodedName}/${localVersion}.tgz`;
+                packageMatch.versions[localVersion].dist.tarball = `${req.protocol}://${req.hostname}/${encodedName}/-/${encodedName}-${localVersion}.tgz`;
                 if (!packageMatch.versions[localVersion]._id) {
                     packageMatch.versions[localVersion]._id = `${encodedName}@${localVersion}`;
                 }
             });
         }
         else {
-            packageMatch.versions[version].dist.tarball = `${req.protocol}://${req.hostname}/${encodedName}/-/${encodedName}/${version}.tgz`;
+            packageMatch.versions[version].dist.tarball = `${req.protocol}://${req.hostname}/${encodedName}/-/${encodedName}-${version}.tgz`;
         }
         // We got a package version match
         // This query should hopefully return the URL to the tarball for the package
@@ -85,7 +87,6 @@ async function getPackage(req, res) {
 
 async function getTarball(req, res) {
     try {
-        debugger;
         const {name, version} = req.params;
         let contents = await req.dutyfree.getTarball(_getPackageFilename(name, version));
         if (!contents) {
@@ -100,17 +101,21 @@ async function getTarball(req, res) {
             }
         }
         if (contents) {
-            res.send(contents);
+            // TODO: The passthrough piping doesn't work :(
+            const writeable = new Writeable();
+            contents.pipe(writeable);
+            contents.once('finish', () => {
+                logger.info(`${req.url} has finished piping`);
+                res.end();
+            });
+            res.json({
+                hi: 'there',
+            });
+            // contents.pipe(res);
         }
         else {
             res.status(404).end();
         }
-        // const stream = req.dutyfree.getTarballStream(_getPackageFilename(name, version));
-        // stream.pipe(res);
-        // stream.once('finish', () => {
-        //     logger.info('Finished piping');
-        //     res.end();
-        // });
     }
     catch (error) {
         res.status(500).json({

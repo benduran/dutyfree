@@ -1,6 +1,8 @@
 
 const fetch = require('node-fetch');
 
+const logger = require('../logger');
+
 /**
  * Proxies requests through to another NPMJS-compatible registry
  * @param {Object} options
@@ -8,13 +10,13 @@ const fetch = require('node-fetch');
  * @param {Boolean} options.secure - True to use HTTPS, false to use HTTP. Defaults to false.
  * @param {Boolean} options.parseResponse - True to attempt to parse the response to JSON or text. False to leave it alone.
  */
-module.exports = async ({
+async function proxy({
     url,
     registryHost,
     // headers,
     secure = false,
     parseResponse = true,
-}) => {
+}) {
     if (!url) {
         throw new Error('No request url was provided when proxying to another npm registry.');
     }
@@ -22,6 +24,7 @@ module.exports = async ({
         throw new Error('No registryHost url was provided when proxying to another npm registry.');
     }
     const outboundUrl = `http${secure ? 's' : ''}://${registryHost}${url}`;
+    logger.info(`Proxying request to ${outboundUrl}`);
     const response = await fetch(outboundUrl, {
         method: 'GET',
     });
@@ -41,4 +44,6 @@ module.exports = async ({
     return Object.assign({}, response, {
         body: parsedResult,
     });
-};
+}
+
+module.exports = proxy;

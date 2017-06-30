@@ -4,7 +4,7 @@ const {userController, packageController} = require('./controllers');
 // More specific routes need to come BEFORE less specific ones
 exports.bind = function (router) {
     router
-    .route('/:name/-/:name/:version.tgz')
+    .route('/:name/-/:name-:version.tgz')
     .get(packageController.getTarball);
 
     router
