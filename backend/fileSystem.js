@@ -81,11 +81,11 @@ class FileSystemBackend {
         await this._writeFile(filePath, JSON.stringify(obj));
     }
     getTarball(tarballName) {
-        return new Promise((resolve, reject) => {
+        return new Promise((resolve) => {
             const tarballPath = path.join(this.tarballDir, tarballName);
             fs.exists(tarballPath, (exists) => {
                 if (exists) {
-                    this._readFile(tarballPath, false, 'base64').then(resolve).catch(reject);
+                    resolve(fs.createReadStream(tarballPath));
                 }
                 else {
                     resolve(null);

@@ -1,7 +1,8 @@
 
-const {omit} = require('lodash');
+const fs = require('fs');
+const {Readable} = require('stream');
 
-const {Writeable} = require('stream');
+const {omit} = require('lodash');
 
 const proxy = require('../../proxy');
 const logger = require('../../logger');
@@ -101,17 +102,11 @@ async function getTarball(req, res) {
             }
         }
         if (contents) {
-            // TODO: The passthrough piping doesn't work :(
-            const writeable = new Writeable();
-            contents.pipe(writeable);
             contents.once('finish', () => {
-                logger.info(`${req.url} has finished piping`);
+                logger.info(`Finished piping ${name}@${version} package.`);
                 res.end();
             });
-            res.json({
-                hi: 'there',
-            });
-            // contents.pipe(res);
+            contents.pipe(res);
         }
         else {
             res.status(404).end();
