@@ -1,7 +1,4 @@
 
-const fs = require('fs');
-const {Readable} = require('stream');
-
 const {omit} = require('lodash');
 
 const proxy = require('../../proxy');

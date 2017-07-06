@@ -103,6 +103,20 @@ class FileSystemBackend {
         await this.syncMetadata();
         return this._metadata[packageName];
     }
+    async searchForPackageByName(packageName) {
+        const lowerPName = packageName.toLowerCase();
+        await this.syncMetadata();
+        return Object.keys(this._metadata).filter((key) => {
+            return key.toLowerCase().startsWith(lowerPName);
+        }).map((pName) => {
+            const returnMe = {
+                name: pName,
+                description: this._metadata[pName].description,
+                latest: this._metadata[pName]['dist-tags'].latest,
+            };
+            return returnMe;
+        });
+    }
     async getPackageVersion(packageName, version) {
         const match = await this.getPackageByName(packageName);
         return match ? match.versions[version] : null;
