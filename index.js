@@ -35,13 +35,13 @@ function setup(options = {}) {
         },
     }));
     server.use(dutyfreeBackend.init(backend));
-    server.use(routes());
     server.use(express.static(path.join(__dirname, '/pages'), {
         maxAge: staticMaxAge,
     }));
     server.use(express.static(path.join(__dirname, '/dist'), {
         maxAge: staticMaxAge,
     }));
+    server.use(routes());
     return server;
 }
 

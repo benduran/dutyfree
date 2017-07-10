@@ -39,7 +39,8 @@ module.exports = function (env = {}) {
                 test: /\.(styl|css)$/,
                 use: [
                     'style-loader',
-                    'css-loader', {
+                    'css-loader',
+                    {
                         loader: 'postcss-loader',
                         options: {
                             plugins: () => {

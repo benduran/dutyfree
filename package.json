@@ -7,6 +7,7 @@
     "webpack": "webpack --progress",
     "webpack-dev-server": "webpack-dev-server --progress --colors",
     "build:client": "gulp build:client",
+    "build:client-production": "webpack --progress --env.production --colors",
     "dev": "gulp dev",
     "watchserver": "gulp watchserver"
   },
