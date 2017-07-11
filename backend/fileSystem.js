@@ -101,6 +101,7 @@ class FileSystemBackend {
     }
     async getPackageByName(packageName) {
         await this.syncMetadata();
+        console.log(this._metadata);
         return this._metadata[packageName];
     }
     async searchForPackageByName(packageName) {

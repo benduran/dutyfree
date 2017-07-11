@@ -1,8 +1,12 @@
 
-const {webAppController} = require('./controllers');
+const {packagesController} = require('./controllers');
 
 exports.bind = function (router) {
     router
-        .route('/api/package/autocomplete')
-        .get(webAppController.autocomplete);
+        .route('/api/packages/find')
+        .get(packagesController.find);
+
+    router
+        .route('/api/packages/get/:name/:version?')
+        .get(packagesController.get);
 };
