@@ -21,15 +21,15 @@ exports.bind = function (router) {
         .put(userController.registerUser);
 
     router
+        .route('/:name/-rev/:rev?')
+        .put(packageController.unpublishSpecific)
+        .delete(packageController.unpublishAll);
+
+    router
         .route('/:name/:version?')
         .get(packageController.getPackage);
 
     router
         .route('/:name')
         .put(packageController.publish);
-
-    router
-        .route('/:name/-rev/:rev?')
-        .put(packageController.unpublishSpecific)
-        .delete(packageController.unpublishAll);
 };

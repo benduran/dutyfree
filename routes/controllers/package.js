@@ -124,17 +124,51 @@ async function getTarball(req, res) {
     }
     catch (error) {
         res.status(500).json({
-            error: error.message || error,
+            error: error.message,
         });
     }
 }
 
-function unpublishSpecific(req, res) {
-    res.send('unpublish specific...');
+async function unpublishSpecific(req, res) {
+    const {name, rev} = req.params;
+    try {
+        const versionToUnpublish = !rev || rev === 'undefined' ? null : rev;
+        let unpublishedPackage = null;
+        if (!versionToUnpublish) {
+            // unpublish the whole thing
+            unpublishedPackage = await req.dutyfree.unpublishPackageByName(name);
+        }
+        else {
+            unpublishedPackage = await req.dutyfree.unpublishPackageByNameAndVersion(name, versionToUnpublish);
+        }
+        if (unpublishedPackage) {
+            res.json({
+                ok: 'updated package',
+            });
+        }
+        else {
+            // Package wasn't found to unpublish
+            res.status(404);
+        }
+    }
+    catch (error) {
+        res.status(500).json({
+            error: error.message,
+        });
+    }
 }
 
-function unpublishAll(req, res) {
-    res.send('unpublish all...');
+async function unpublishAll(req, res) {
+    const {name} = req.params;
+    try {
+        await req.dutyfree.unpublishPackageByName(name);
+        res.status(200).end();
+    }
+    catch (error) {
+        res.status(500).json({
+            error: error.message,
+        });
+    }
 }
 
 function unpublishTarball(req, res) {

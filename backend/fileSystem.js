@@ -138,6 +138,22 @@ class FileSystemBackend {
         await this._writeJSON(this.metadataPath, this._metadata);
         await this._writeFile(path.join(this.tarballDir, tarballName), tarballBuffer, 'base64');
     }
+    async unpublishPackageByName(packageName) {
+        const match = await this.getPackageByName(packageName);
+        if (match) {
+            delete this._metadata[packageName];
+            return true;
+        }
+        return false;
+    }
+    async unpublishPackageByNameAndVersion(packageName, version) {
+        const match = await this.getPackageByName(packageName);
+        if (match && match.versions && match.versions[version]) {
+            delete this._metadata[packageName].versions[version];
+            return true;
+        }
+        return false;
+    }
     async syncUsers() {
         if (!this._lastUsersAccessTime || Date.now() - this._lastUsersAccessTime > this.maxAge) {
             this._users = await this._readFile(this.usersPath) || [];
