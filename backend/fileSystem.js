@@ -104,6 +104,11 @@ class FileSystemBackend {
         console.log(this._metadata);
         return this._metadata[packageName];
     }
+    async getPackageByNameAndVersion(packageName, version) {
+        const packageMatch = await this.getPackageByName(packageName);
+        const versions = packageMatch ? packageMatch.versions || {} : {};
+        return versions[version];
+    }
     async searchForPackageByName(packageName) {
         const lowerPName = packageName.toLowerCase();
         await this.syncMetadata();
@@ -125,9 +130,11 @@ class FileSystemBackend {
     async publishPackage(packageName, version, metadata, tarballName, tarballBuffer) {
         await this.syncMetadata();
         const currentMetadata = this._metadata[packageName] || {};
-        const versions = currentMetadata.versions || {};
-        versions[version] = metadata;
-        this._metadata[packageName] = Object.assign({}, currentMetadata, metadata);
+        if (!currentMetadata.versions) {
+            currentMetadata.versions = {};
+        }
+        currentMetadata.versions[version] = metadata.versions[version];
+        this._metadata[packageName] = currentMetadata;
         await this._writeJSON(this.metadataPath, this._metadata);
         await this._writeFile(path.join(this.tarballDir, tarballName), tarballBuffer, 'base64');
     }

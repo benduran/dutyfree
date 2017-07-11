@@ -13,10 +13,11 @@ async function publish(req, res) {
     try {
         // Check for package version collisions
         const reqPackageMetadata = req.body || {};
-        const packageAndVersionExists = await req.dutyfree.getPackageVersion(
+        const existingPackageVersion = await req.dutyfree.getPackageVersion(
             reqPackageMetadata.name,
             reqPackageMetadata['dist-tags'].latest,
-        ) !== null;
+        );
+        const packageAndVersionExists = typeof existingPackageVersion !== 'undefined' && existingPackageVersion !== null;
         if (packageAndVersionExists) {
             res.status(409).json({
                 error: 'conflict',
@@ -49,37 +50,49 @@ async function publish(req, res) {
 
 async function getPackage(req, res) {
     const {name, version} = req.params;
-    let packageMatch = await req.dutyfree.getPackageByName(name);
-    if (!packageMatch) {
-        // Try to proxy it through to public NPM registry to see if it exists there
-        const response = await proxy({
-            url: req.url,
-            registryHost: 'registry.npmjs.org',
-        });
-        if (response.ok) {
-            packageMatch = response.body;
-        }
-    }
-    if (packageMatch) {
-        const encodedName = encodeURIComponent(name);
-        // If no version was specified in the route params, then we need to loop over every-single version and map a tarball URL
-        if (!version) {
-            Object.keys(packageMatch.versions).forEach((localVersion) => {
-                packageMatch.versions[localVersion].dist.tarball = `${req.protocol}://${req.hostname}/${encodedName}/-/${encodedName}-${localVersion}.tgz`;
-                if (!packageMatch.versions[localVersion]._id) {
-                    packageMatch.versions[localVersion]._id = `${encodedName}@${localVersion}`;
-                }
+    try {
+        let packageMatch = typeof version !== 'undefined' ?
+            await req.dutyfree.getPackageByNameAndVersion(name, version) :
+            await req.dutyfree.getPackageByName(name);
+        if (!packageMatch) {
+            // Try to proxy it through to public NPM registry to see if it exists there
+            const response = await proxy({
+                url: req.url,
+                registryHost: 'registry.npmjs.org',
             });
+            if (response.ok) {
+                packageMatch = response.body;
+            }
+        }
+        if (packageMatch) {
+            const encodedName = encodeURIComponent(name);
+            // If no version was specified in the route params, then we need to loop over every-single version and map a tarball URL
+            if (!version) {
+                Object.keys(packageMatch.versions).forEach((localVersion) => {
+                    packageMatch.versions[localVersion].dist.tarball = `${req.protocol}://${req.hostname}/${encodedName}/-/${encodedName}-${localVersion}.tgz`;
+                    if (!packageMatch.versions[localVersion]._id) {
+                        packageMatch.versions[localVersion]._id = `${encodedName}@${localVersion}`;
+                    }
+                });
+            }
+            else if (packageMatch.versions) {
+                packageMatch.versions[version].dist.tarball = `${req.protocol}://${req.hostname}/${encodedName}/-/${encodedName}-${version}.tgz`;
+            }
+            else {
+                packageMatch.dist.tarball = `${req.protocol}://${req.hostname}/${encodedName}/-/${encodedName}-${version}.tgz`;
+            }
+            // We got a package version match
+            // This query should hopefully return the URL to the tarball for the package
+            res.status(200).json(packageMatch);
         }
         else {
-            packageMatch.versions[version].dist.tarball = `${req.protocol}://${req.hostname}/${encodedName}/-/${encodedName}-${version}.tgz`;
+            res.status(404).end();
         }
-        // We got a package version match
-        // This query should hopefully return the URL to the tarball for the package
-        res.status(200).json(packageMatch);
     }
-    else {
-        res.status(404).end();
+    catch (error) {
+        res.status(500).json({
+            error: error.message,
+        });
     }
 }
 
