@@ -46,32 +46,5 @@ rules:
     - warn
   class-methods-use-this:
     - off
-  react/sort-prop-types: 0
-  react/jsx-closing-bracket-location: 0
-  react/jsx-no-literals: 0
-  react/require-optimization: 0
-  react/forbid-prop-types:
-      - error
-      - forbid:
-          - any
-  react/jsx-sort-props:
-      - off
-  react/jsx-max-props-per-line:
-      - warn
-      - maximum: 5
-  react/jsx-filename-extension:
-      - warn
-  react/no-danger:
-      - warn
-  react/no-set-state:
-      - warn
-  react/jsx-no-bind:
-      - off
-  react/sort-comp:
-      - off
-  react/jsx-indent:
-    - error
-    - 4
-  react/jsx-indent-props:
-    - error
-    - 4
+  jsx-a11y/href-no-hash:
+    - off

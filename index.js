@@ -6,6 +6,7 @@ const
     express = require('express'),
     cors = require('cors'),
     bodyParser = require('body-parser'),
+    morgan = require('morgan'),
     compression = require('compression');
 
 const
@@ -24,6 +25,7 @@ function setup(options = {}) {
     } = options;
     process.env.NODE_ENV = env;
     const server = express();
+    server.use(morgan(':user-agent - :remote-addr - :remote-user [:date[clf]] ":method :url HTTP/:http-version" :status :res[content-length]'));
     server.use(cors());
     server.use(bodyParser.json({
         extended: true,
