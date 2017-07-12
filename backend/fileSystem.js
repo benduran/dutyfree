@@ -157,7 +157,14 @@ class FileSystemBackend {
             currentMetadata['dist-tags'] = {
                 latest: version,
             };
+            const created = new Date();
+            currentMetadata.time = {
+                created: created.toISOString(),
+            };
         }
+        const now = new Date();
+        currentMetadata.time[version] = now.toISOString();
+        currentMetadata.time.modified = now.toISOString();
         currentMetadata.versions[version] = metadata.versions[version];
         this._metadata[packageName] = currentMetadata;
         const maxVersion = Object.keys(currentMetadata.versions).sort(semver.rcompare)[0];
