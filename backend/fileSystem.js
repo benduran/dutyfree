@@ -172,39 +172,26 @@ class FileSystemBackend {
         await this._writeJSON(this.metadataPath, this._metadata);
         await this._writeFile(path.join(this.tarballDir, tarballName), tarballBuffer, 'base64');
     }
-    unpublishPackageByName(packageName) {
-        return new Promise((resolve, reject) => {
-            this.getPackageByName(packageName).then((match) => {
-                if (match) {
-                    // Remove all the tarballs first
-                    Promise.all(Object.keys(match.versions).map((version) => {
-                        return new Promise((resolve2, reject2) => {
-                            const filePathToRemove = path.join(this.tarballDir, `${packageName}-${version}.tgz`);
-                            this._unlinkFile(filePathToRemove).then(resolve2).catch(reject2);
-                        });
-                    })).then(() => {
-                        delete this._metadata[packageName];
-                        this._writeJSON(this.metadataPath, this._metadata).then(() => {
-                            resolve(true);
-                        }).catch(reject);
-                    }).catch(reject);
-                }
-                else {
-                    resolve(false);
-                }
-            }).catch(reject);
-        });
+    async unpublishPackageByName(packageName) {
+        const match = this.getPackageByName(packageName);
+        if (match) {
+            delete this._metadata[packageName];
+            await this._writeJSON(this.metadataPath, this._metadata);
+            return true;
+        }
+        return false;
     }
     async unpublishPackageByNameAndVersion(packageName, version) {
         const match = await this.getPackageByName(packageName);
         if (match && match.versions && match.versions[version]) {
-            const filePathToRemove = path.join(this.tarballDir, `${packageName}-${version}.tgz`);
-            await this._unlinkFile(filePathToRemove);
             delete this._metadata[packageName].versions[version];
             await this._writeJSON(this.metadataPath, this._metadata);
             return true;
         }
         return false;
+    }
+    async unpublishTarball(filename) {
+        await this._unlinkFile(path.join(this.tarballDir, filename));
     }
     async syncUsers() {
         if (!this._lastUsersAccessTime || Date.now() - this._lastUsersAccessTime > this.maxAge) {

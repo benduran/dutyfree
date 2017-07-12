@@ -8,6 +8,17 @@ function _getPackageFilename(name, version) {
     return `${name}-${version}.tgz`;
 }
 
+async function _unpublishAllPackagesForName(packageName, dutyfree) {
+    const allAwait = [];
+    const packageDetails = await dutyfree.getPackageByName(packageName);
+    await dutyfree.unpublishPackageByName(packageName);
+    const versions = Object.keys(packageDetails.versions);
+    for (let i = 0; i < versions.length; i++) {
+        allAwait.push(dutyfree.unpublishTarball(_getPackageFilename(packageName, versions[i])));
+    }
+    await Promise.all(allAwait);
+}
+
 async function publish(req, res) {
     // TODO: Before allowing somebody to publish, we should check to see which packages they are *allowed* to actually publish
     try {
@@ -138,7 +149,8 @@ async function unpublishSpecific(req, res) {
         let unpublishedPackage = null;
         if (!versionToUnpublish) {
             // unpublish the whole thing
-            unpublishedPackage = await req.dutyfree.unpublishPackageByName(name);
+            await _unpublishAllPackagesForName(name, req.dutyfree);
+            unpublishedPackage = true;
         }
         else {
             unpublishedPackage = await req.dutyfree.unpublishPackageByNameAndVersion(name, versionToUnpublish);
@@ -164,7 +176,7 @@ async function unpublishSpecific(req, res) {
 async function unpublishAll(req, res) {
     const {name} = req.params;
     try {
-        await req.dutyfree.unpublishPackageByName(name);
+        await _unpublishAllPackagesForName(name, req.dutyfree);
         res.status(200).end();
     }
     catch (error) {
@@ -176,7 +188,29 @@ async function unpublishAll(req, res) {
 }
 
 function unpublishTarball(req, res) {
-    res.send('unpublish tarball...');
+    const {name, file, rev} = req.params;
+    const versionToUnpublish = !rev || rev === 'undefined' ? null : rev;
+    let success = false;
+    try {
+        req.dutyfree.unpublishTarball(file);
+        success = true;
+    }
+    catch (error) {} // eslint-disable-line
+    if (!success) {
+        try {
+            req.dutyfree.unpublishTarball(_getPackageFilename(name, versionToUnpublish));
+            success = true;
+        }
+        catch (error) {} // eslint-disable-line
+    }
+    if (success) {
+        res.json({
+            ok: 'file removed',
+        });
+    }
+    else {
+        res.status(404).end();
+    }
 }
 
 exports.publish = publish;
