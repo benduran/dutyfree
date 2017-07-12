@@ -41,10 +41,10 @@ async function publish(req, res) {
         }
     }
     catch (error) {
+        logger.error(error);
         res.status(500).json({
             error: error.message || error,
         });
-        logger.error(error);
     }
 }
 
@@ -90,6 +90,7 @@ async function getPackage(req, res) {
         }
     }
     catch (error) {
+        logger.error(error);
         res.status(500).json({
             error: error.message,
         });
@@ -123,6 +124,7 @@ async function getTarball(req, res) {
         }
     }
     catch (error) {
+        logger.error(error);
         res.status(500).json({
             error: error.message,
         });
@@ -152,6 +154,7 @@ async function unpublishSpecific(req, res) {
         }
     }
     catch (error) {
+        logger.error(error);
         res.status(500).json({
             error: error.message,
         });
@@ -165,6 +168,7 @@ async function unpublishAll(req, res) {
         res.status(200).end();
     }
     catch (error) {
+        logger.error(error);
         res.status(500).json({
             error: error.message,
         });

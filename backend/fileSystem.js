@@ -1,7 +1,9 @@
 
 const path = require('path');
 
-const fs = require('fs-extra');
+const
+    fs = require('fs-extra'),
+    semver = require('semver');
 
 const {encryptString, verifyHash} = require('../utils').encryption;
 
@@ -64,6 +66,25 @@ class FileSystemBackend {
             });
         });
     }
+    _unlinkFile(filePath) {
+        return new Promise((resolve, reject) => {
+            fs.exists(filePath, (exists) => {
+                if (exists) {
+                    fs.remove(filePath, (error) => {
+                        if (error) {
+                            reject(error);
+                        }
+                        else {
+                            resolve();
+                        }
+                    });
+                }
+                else {
+                    reject(new Error(`${filePath} does not exist. Cannot unlink.`));
+                }
+            });
+        });
+    }
     getTarballStream(tarballName) {
         return new Promise((resolve) => {
             const tarballPath = path.join(this.tarballDir, tarballName);
@@ -101,7 +122,6 @@ class FileSystemBackend {
     }
     async getPackageByName(packageName) {
         await this.syncMetadata();
-        console.log(this._metadata);
         return this._metadata[packageName];
     }
     async getPackageByNameAndVersion(packageName, version) {
@@ -132,24 +152,49 @@ class FileSystemBackend {
         const currentMetadata = this._metadata[packageName] || {};
         if (!currentMetadata.versions) {
             currentMetadata.versions = {};
+            currentMetadata._id = currentMetadata.name = packageName; // eslint-disable-line
+            currentMetadata.description = metadata.description;
+            currentMetadata['dist-tags'] = {
+                latest: version,
+            };
         }
         currentMetadata.versions[version] = metadata.versions[version];
         this._metadata[packageName] = currentMetadata;
+        const maxVersion = Object.keys(currentMetadata.versions).sort(semver.rcompare)[0];
+        this._metadata[packageName]['dist-tags'].latest = maxVersion;
         await this._writeJSON(this.metadataPath, this._metadata);
         await this._writeFile(path.join(this.tarballDir, tarballName), tarballBuffer, 'base64');
     }
-    async unpublishPackageByName(packageName) {
-        const match = await this.getPackageByName(packageName);
-        if (match) {
-            delete this._metadata[packageName];
-            return true;
-        }
-        return false;
+    unpublishPackageByName(packageName) {
+        return new Promise((resolve, reject) => {
+            this.getPackageByName(packageName).then((match) => {
+                if (match) {
+                    // Remove all the tarballs first
+                    Promise.all(Object.keys(match.versions).map((version) => {
+                        return new Promise((resolve2, reject2) => {
+                            const filePathToRemove = path.join(this.tarballDir, `${packageName}-${version}.tgz`);
+                            this._unlinkFile(filePathToRemove).then(resolve2).catch(reject2);
+                        });
+                    })).then(() => {
+                        delete this._metadata[packageName];
+                        this._writeJSON(this.metadataPath, this._metadata).then(() => {
+                            resolve(true);
+                        }).catch(reject);
+                    }).catch(reject);
+                }
+                else {
+                    resolve(false);
+                }
+            }).catch(reject);
+        });
     }
     async unpublishPackageByNameAndVersion(packageName, version) {
         const match = await this.getPackageByName(packageName);
         if (match && match.versions && match.versions[version]) {
+            const filePathToRemove = path.join(this.tarballDir, `${packageName}-${version}.tgz`);
+            await this._unlinkFile(filePathToRemove);
             delete this._metadata[packageName].versions[version];
+            await this._writeJSON(this.metadataPath, this._metadata);
             return true;
         }
         return false;
