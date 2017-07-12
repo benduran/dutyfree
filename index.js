@@ -20,8 +20,10 @@ function setup(options = {}) {
         staticMaxAge = STATIC_MAX_AGE, // Cache for 30 days by default
         backend = BackendType.FileSystem, // Can be either Number or Object / Class
         env = 'develop',
+        fallbackRegistry = 'registry.npmjs.org',
     } = options;
     process.env.NODE_ENV = env;
+    process.env.FALLBACK_REGISTRY = fallbackRegistry;
     const server = express();
     server.use(morgan(':user-agent - :remote-addr - :remote-user [:date[clf]] ":method :url HTTP/:http-version" :status :res[content-length]'));
     server.use(cors());

@@ -105,7 +105,7 @@ async function getPackage(req, res) {
             // Try to proxy it through to public NPM registry to see if it exists there
             const response = await proxy({
                 url: req.url,
-                registryHost: 'registry.npmjs.org',
+                registryHost: process.env.FALLBACK_REGISTRY,
             });
             if (response.ok) {
                 packageMatch = response.body;
@@ -152,7 +152,7 @@ async function getTarball(req, res) {
             // Proxy to another registry
             const response = await proxy({
                 url: req.url,
-                registryHost: 'registry.npmjs.org',
+                registryHost: process.env.FALLBACK_REGISTRY,
                 parseResponse: false,
             });
             if (response.ok) {
@@ -160,10 +160,6 @@ async function getTarball(req, res) {
             }
         }
         if (contents) {
-            contents.once('finish', () => {
-                logger.info(`Finished piping ${name}@${version} package.`);
-                res.end();
-            });
             contents.pipe(res);
         }
         else {

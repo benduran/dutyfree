@@ -19,7 +19,6 @@
   "dependencies": {
     "bcryptjs": "^2.4.3",
     "body-parser": "^1.17.2",
-    "chalk": "^2.0.1",
     "clone": "^2.1.1",
     "compression": "^1.7.0",
     "cors": "^2.8.3",
@@ -40,6 +39,7 @@
     "babel-preset-latest": "^6.24.1",
     "babel-preset-react": "^6.24.1",
     "babel-preset-stage-1": "^6.24.1",
+    "chalk": "^2.0.1",
     "css-loader": "^0.28.4",
     "eslint": "^4.2.0",
     "eslint-config-airbnb": "^15.0.2",
