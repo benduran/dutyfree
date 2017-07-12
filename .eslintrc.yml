@@ -17,8 +17,6 @@ rules:
   max-len:
     - error
     - 200
-  one-var:
-    - off
   indent:
     - error
     - 4
