@@ -1,11 +1,46 @@
 
 const {omit} = require('lodash');
+const semver = require('semver');
+const deepClone = require('clone');
 
 const proxy = require('../../proxy');
 const logger = require('../../logger');
 
 function _getPackageFilename(name, version) {
     return `${name}-${version}.tgz`;
+}
+
+/**
+ * Coalesces the current metadata available for a given package into the format required by NPM,
+ * based on incoming metadata sent from NPM CLI. Modifies the reference to the object provided,
+ * rather than returning a clone
+ * @param {Object} currentMetadata - Current metadata for a given package
+ * @param {Object} incomingMetadata - Metadata NPM is trying to set for a given package
+ * @param {String} version - semver string for incoming package to update
+ */
+function _massageMetadata(packageName, currentMetadata, incomingMetadata, version) {
+    const updatedMetadata = deepClone(currentMetadata, true);
+    if (!updatedMetadata.versions) {
+        updatedMetadata.versions = {};
+        updatedMetadata._id = updatedMetadata.name = packageName; // eslint-disable-line
+        updatedMetadata.description = incomingMetadata.description;
+        updatedMetadata['dist-tags'] = {
+            latest: version,
+        };
+        const created = new Date();
+        updatedMetadata.time = {
+            created: created.toISOString(),
+        };
+        updatedMetadata.contributors = incomingMetadata.contributors;
+        updatedMetadata.license = incomingMetadata.license;
+    }
+    const now = new Date();
+    updatedMetadata.time[version] = now.toISOString();
+    updatedMetadata.time.modified = now.toISOString();
+    updatedMetadata.versions[version] = incomingMetadata.versions[version];
+    const maxVersion = Object.keys(updatedMetadata.versions).sort(semver.rcompare)[0];
+    updatedMetadata['dist-tags'].latest = maxVersion;
+    return updatedMetadata;
 }
 
 async function _unpublishAllPackagesForName(packageName, dutyfree) {
@@ -47,6 +82,7 @@ async function publish(req, res) {
                 cleanMetadataToPublish,
                 tarballNameToWrite,
                 bufferToWrite,
+                _massageMetadata,
             );
             res.status(201).json(cleanMetadataToPublish);
         }

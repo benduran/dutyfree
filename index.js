@@ -1,19 +1,17 @@
 
 const path = require('path');
 
-const
-    minimist = require('minimist'),
-    express = require('express'),
-    cors = require('cors'),
-    bodyParser = require('body-parser'),
-    morgan = require('morgan'),
-    compression = require('compression');
+const minimist = require('minimist');
+const express = require('express');
+const cors = require('cors');
+const bodyParser = require('body-parser');
+const morgan = require('morgan');
+const compression = require('compression');
 
-const
-    {BackendType} = require('./enum'),
-    dutyfreeBackend = require('./backend'),
-    routes = require('./routes'),
-    logger = require('./logger');
+const {BackendType} = require('./enum');
+const dutyfreeBackend = require('./backend');
+const routes = require('./routes');
+const logger = require('./logger');
 
 const STATIC_MAX_AGE = 1000 * 60 * 60 * 24 * 30;
 

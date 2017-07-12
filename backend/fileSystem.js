@@ -1,9 +1,7 @@
 
 const path = require('path');
 
-const
-    fs = require('fs-extra'),
-    semver = require('semver');
+const fs = require('fs-extra');
 
 const {encryptString, verifyHash} = require('../utils').encryption;
 
@@ -147,30 +145,10 @@ class FileSystemBackend {
         const match = await this.getPackageByName(packageName);
         return match ? match.versions[version] : null;
     }
-    async publishPackage(packageName, version, metadata, tarballName, tarballBuffer) {
+    async publishPackage(packageName, version, metadata, tarballName, tarballBuffer, massageMetadata) {
         await this.syncMetadata();
         const currentMetadata = this._metadata[packageName] || {};
-        if (!currentMetadata.versions) {
-            currentMetadata.versions = {};
-            currentMetadata._id = currentMetadata.name = packageName; // eslint-disable-line
-            currentMetadata.description = metadata.description;
-            currentMetadata['dist-tags'] = {
-                latest: version,
-            };
-            const created = new Date();
-            currentMetadata.time = {
-                created: created.toISOString(),
-            };
-            currentMetadata.contributors = metadata.contributors;
-            currentMetadata.license = metadata.license;
-        }
-        const now = new Date();
-        currentMetadata.time[version] = now.toISOString();
-        currentMetadata.time.modified = now.toISOString();
-        currentMetadata.versions[version] = metadata.versions[version];
-        this._metadata[packageName] = currentMetadata;
-        const maxVersion = Object.keys(currentMetadata.versions).sort(semver.rcompare)[0];
-        this._metadata[packageName]['dist-tags'].latest = maxVersion;
+        this._metadata[packageName] = massageMetadata(packageName, currentMetadata, metadata, version);
         await this._writeJSON(this.metadataPath, this._metadata);
         await this._writeFile(path.join(this.tarballDir, tarballName), tarballBuffer, 'base64');
     }
