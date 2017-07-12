@@ -161,6 +161,8 @@ class FileSystemBackend {
             currentMetadata.time = {
                 created: created.toISOString(),
             };
+            currentMetadata.contributors = metadata.contributors;
+            currentMetadata.license = metadata.license;
         }
         const now = new Date();
         currentMetadata.time[version] = now.toISOString();
