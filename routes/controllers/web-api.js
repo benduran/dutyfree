@@ -31,24 +31,27 @@ async function get(req, res) {
     const release = pack.versions[version];
     const latest = pack.versions[pack['dist-tags'].latest];
 
-
-    const repoRegex = new RegExp('(https?://.*github.com/.*/.*).git', 'i');
     const maintainers = [];
-    pack.maintainers.forEach((maintainer) => {
+    latest.maintainers.forEach((maintainer) => {
         maintainers.push({ name: maintainer.name, email: maintainer.email });
     });
 
-    res.json({
+    const result = {
         name: pack.name,
         description: release.description,
         readme: release.readme,
-        // repo: pack.repository.match(repoRegex)[1],
         author: { name: release._npmUser.name, email: release._npmUser.email },
         collaborators: maintainers,
-        // versions: { version: Object.keys(pack.versions), time: pack.time[latest.version] },
+        versions: { version: Object.keys(pack.versions), time: pack.time[latest.version] },
         keywords: latest.keywords,
         dependencies: ['depA', 'depB', 'depC'],
-    });
+    };
+
+    if (latest.repository) {
+        result.repo = latest.repository.url.match(/(https?:\/\/.*github.com\/.*\/.*).git/i)[1];
+    }
+
+    res.json(result);
 }
 
 exports.find = find;
