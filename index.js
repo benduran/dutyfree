@@ -21,6 +21,7 @@ function setup(options = {}) {
         backend = BackendType.FileSystem, // Can be either Number or Object / Class
         env = 'develop',
         fallbackRegistry = 'registry.npmjs.org',
+        maxPackageSearchResults = 100,
     } = options;
     process.env.NODE_ENV = env;
     process.env.FALLBACK_REGISTRY = fallbackRegistry;
@@ -36,7 +37,7 @@ function setup(options = {}) {
             return !req.headers['x-no-compress'];
         },
     }));
-    server.use(dutyfreeBackend.init(backend));
+    server.use(dutyfreeBackend.init(backend, { maxPackageSearchResults }));
     server.use(express.static(path.join(__dirname, '/pages'), {
         maxAge: staticMaxAge,
     }));
@@ -55,9 +56,11 @@ if (!module.parent) {
         port = 80,
         host = '0.0.0.0',
         staticMaxAge = STATIC_MAX_AGE,
+        maxPackageSearchResults,
     } = minimist(process.argv.slice(2));
     const serverInstance = setup({
         staticMaxAge,
+        maxPackageSearchResults,
     });
     serverInstance.listen(port, host, () => {
         logger.info(`App server listening for connections on host ${host} via port ${port}`);
