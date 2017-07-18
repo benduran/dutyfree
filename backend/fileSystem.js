@@ -156,12 +156,21 @@ class FileSystemBackend {
         let result = packages;
 
         // Filter by search query
-        if (typeof properties.query === 'string' && properties.query.length > 0) {
+        if (
+            typeof properties.query === 'string' &&
+            properties.query.length > 0 &&
+            properties.property.length > 0
+        ) {
+            // Selection of properties to check when searching (name, description, author, readme, and keywords)
+            let searchProperties;
+
             // If only searching for names, it's possible to more efficiently search the whole package array
-            let searchProperties = packages;
+            if (properties.property.length === 1 && properties.property[0] === 'name') {
+                searchProperties = packages;
+            }
 
             // If doing an advanced search with additional properties, make a new array of package properties
-            if (properties.property.length !== 1 || properties.property[0] !== 'name') {
+            else {
                 // Extract searchable properties
                 searchProperties = packages.map((pack) => {
                     // Get latest
