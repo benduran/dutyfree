@@ -161,18 +161,25 @@ class FileSystemBackend {
             properties.query.length > 0 &&
             properties.property.length > 0
         ) {
-            // Selection of properties to check when searching (name, description, author, readme, and keywords)
-            let searchProperties;
+            // Set options for searching using sane magic numbers that shouldn't likely need customization
+            const options = {
+                threshold: 0.6,
+                maxPatternLength: 32,
+                shouldSort: true,
+                keys: properties.property,
+            };
 
             // If only searching for names, it's possible to more efficiently search the whole package array
             if (properties.property.length === 1 && properties.property[0] === 'name') {
-                searchProperties = packages;
+                // Perform search for the query in the package array
+                const fuse = new Fuse(packages, options);
+                result = fuse.search(properties.query);
             }
 
-            // If doing an advanced search with additional properties, make a new array of package properties
+            // If doing an advanced search with additional properties, make a new object of package properties
             else {
                 // Extract searchable properties
-                searchProperties = packages.map((pack) => {
+                const searchProperties = packages.map((pack) => {
                     // Get latest
                     const latest = pack.versions[pack['dist-tags'].latest];
 
@@ -185,26 +192,27 @@ class FileSystemBackend {
                         keywords: latest.keywords,
                     };
                 });
+
+                // Perform search for the query in the package array
+                const fuse = new Fuse(searchProperties, options);
+                const searchResults = fuse.search(properties.query);
+
+                // Translate searchable properties object back into the original packages
+                result = searchResults.map((searchResult) => {
+                    for (let i = 0; i < result.length; i++) {
+                        if (searchResult.name === result[i].name) return result[i];
+                    }
+                    return null;
+                });
             }
-
-            // Set options for searching
-            const options = {
-                shouldSort: true,
-                threshold: 0.6,
-                maxPatternLength: 32,
-                keys: properties.property,
-            };
-
-            // Perform search for the query in the package array
-            const fuse = new Fuse(searchProperties, options);
-            result = fuse.search(properties.query);
         }
 
         // Filter by author
         if (typeof properties.author === 'string' && properties.author.length > 0) {
             result = result.filter((pack) => {
-                const latest = pack.versions[pack['dist-tags'].latest];
-                return latest._npmUser === properties.author;
+                const latestVersionNumber = pack['dist-tags'].latest;
+                const latest = pack.versions[latestVersionNumber];
+                return latest._npmUser.name.toLowerCase() === properties.author.toLowerCase();
             });
         }
 
@@ -219,16 +227,11 @@ class FileSystemBackend {
         }
 
         // Sanitize the start value
-        let startingValue = properties.start;
-        if (startingValue === undefined || startingValue < 0) {
-            startingValue = 0;
-        }
+        const startingValue = Math.max(properties.start || 0, 0);
 
         // Sanitize the amount value
-        let resultsToReturn;
-        if (properties.amount === undefined || properties.amount < 1) {
-            resultsToReturn = this.maxPackageSearchResults;
-        }
+        let resultsToReturn = Math.max(properties.amount || this.maxPackageSearchResults, 0);
+        if (!resultsToReturn) resultsToReturn = this.maxPackageSearchResults;
         resultsToReturn = Math.min(resultsToReturn, this.maxPackageSearchResults);
 
         // Return the requested number of results capped at the program's overall limit

@@ -38,7 +38,9 @@ async function find(req, res) {
         res.json(matches);
     }
     catch (error) {
-        res.json.status(500);
+        res.status(500).json({
+            error: 'invalid query string arguments.',
+        });
     }
 }
 
@@ -84,7 +86,9 @@ async function get(req, res) {
         res.json(result);
     }
     catch (error) {
-        res.status(500);
+        res.status(500).json({
+            error: 'failure getting package.',
+        });
     }
 }
 
