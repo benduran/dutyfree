@@ -106,7 +106,7 @@ async function getPackage(req, res) {
       // Try to proxy it through to public NPM registry to see if it exists there
       const response = await proxy({
         url: req.url,
-        registryHost: process.env.FALLBACK_REGISTRY,
+        registryHost: req.config.dutyfree.registry.fallback,
       });
       if (response.ok) {
         packageMatch = response.body;

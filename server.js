@@ -11,6 +11,13 @@ const dutyfreeBackend = require('./backend');
 const routes = require('./routes');
 const logger = require('./logger');
 
+function configMiddleware(config) {
+  return (req, res, next) => {
+    req.config = config;
+    next();
+  };
+}
+
 function setup(config = {}) {
   const server = express();
   server.use(morgan(':user-agent - :remote-addr - :remote-user [:date[clf]] ":method :url HTTP/:http-version" :status :res[content-length]'));
@@ -24,6 +31,7 @@ function setup(config = {}) {
       return !req.headers['x-no-compress'];
     },
   }));
+  server.use(configMiddleware(config));
   server.use(dutyfreeBackend.init(config.dutyfree));
   server.use(express.static(path.join(__dirname, '/pages'), {
     maxAge: config.server.cache.maxAge,

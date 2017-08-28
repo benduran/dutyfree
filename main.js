@@ -11,13 +11,6 @@ process.on('uncaughtException', (error) => {
   logger.error(error);
 });
 
-
-// this.metadataPath = options.metadataPath || DEFAULT_METADATA_PATH;
-// this.usersPath = options.usersPath || DEFAULT_USERS_PATH;
-// this.tarballDir = options.tarballDir || DEFAULT_TARBALL_DIR;
-// this.stale = options.stale || DEFAULT_STALE_AGE;
-// this.maxPackageSearchResults = options.search.maxResults || 100;
-
 function serve(options = {}) {
   const mappedConfig = extend({}, {
     env: options.env,
@@ -34,6 +27,9 @@ function serve(options = {}) {
       metadataPath: options.metadataPath,
       usersPath: options.usersPath,
       tarballDir: options.tarballDir,
+      registry: {
+        fallback: options.fallback,
+      },
       search: {
         maxResults: options.maxResults,
       },
@@ -52,6 +48,7 @@ program
   .option('-m, --maxAge [maxAge]', 'Max static cache file age.', config.server.cache)
   .option('-e, --env [env]', 'Which environment flag to use when running dutyfree. Supports "staging" and "production."', config.env)
   .option('-b, --backend [backend]', 'Which backend to use when running dutyfree. Supports "FileSystem," "AmazonS3,", or path to custom JS file.', config.dutyfree.backend)
+  .option('-f, --fallback [fallback]', 'If package is not found on this server, will proxy request through to another registry.', config.dutyfree.registry.fallback)
   .option('-m, --maxResults [maxResults]', 'How many package results to display, max, when searching from the UI.', config.dutyfree.search.maxResults)
   .option('-s, --stale [stale]', 'How long between reads of the metadata from the FileSystem or AmazonS3 backends.', config.dutyfree.stale)
   .option('--metadataPath [metadataPath]', 'Path to where package metadata JSON file is store in the FileSystem backend', config.dutyfree.metadataPath)

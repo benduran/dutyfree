@@ -15,6 +15,9 @@ const config = {
     tarballDir: path.join(__dirname, '__tarballs'),
     usersPath: path.join(__dirname, '__data', 'users.json'),
     metadataPath: path.join(__dirname, '__data', 'metadata.json'),
+    registry: {
+      fallback: 'registry.npmjs.org',
+    },
     search: {
       maxResults: 100,
     },
