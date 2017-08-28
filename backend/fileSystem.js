@@ -31,7 +31,7 @@ class FileSystemBackend {
       fs.ensureFileSync(this.usersPath);
     }
     if (this.tarballDir) {
-      fs.ensureFileSync(this.tarballDir);
+      fs.ensureDirSync(this.tarballDir);
     }
   }
   _readFile(filePath, isJSON = true, encoding = 'utf8') {
