@@ -19,17 +19,14 @@ rules:
     - 200
   indent:
     - error
-    - 4
+    - 2
     - SwitchCase: 1
-  object-curly-spacing:
-    - off
   func-names:
     - off
   import/prefer-default-export:
     - off
   brace-style:
     - error
-    - stroustrup
   import/no-extraneous-dependencies:
     - off
   import/extensions:

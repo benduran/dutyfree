@@ -1,15 +1,7 @@
 
-const
-    {BackendType} = require('../enum'),
-    FileSystemBackend = require('./fileSystem'),
-    AmazonS3Backend = require('./amazonS3');
-
-let backendInstance = null; // Represents the singleton backend instance for the application
-
-function middleware(req, res, next) {
-    req.dutyfree = backendInstance;
-    next();
-}
+const { BackendType } = require('../enum');
+const FileSystemBackend = require('./fileSystem');
+const AmazonS3Backend = require('./amazonS3');
 
 /**
  * Initializes the type of backend needed for maintaining the NPM packages
@@ -17,25 +9,28 @@ function middleware(req, res, next) {
  * @param {BackendType} backendType - Type of backend to use
  * @return {Function} Express middleware to inject backend into each request object
  */
-exports.init = function (backend, options = {}) {
-    if (typeof backend === 'object' && backend !== null) {
-        // User provided a custom backend.
-        // Let's use this instead.
-        backendInstance = backend;
+exports.init = function (backendType, options = {}) {
+  let backendInstance = null;
+  if (typeof backendType === 'object' && backendType !== null) {
+    // User provided a custom backend.
+    // Let's use this instead.
+    backendInstance = backendType;
+  } else {
+    switch (backendType) {
+      case BackendType.AmazonS3:
+        backendInstance = new AmazonS3Backend(options);
+        break;
+      case BackendType.FileSystem:
+      default:
+        backendInstance = new FileSystemBackend(options);
+        break;
     }
-    else {
-        switch (backend) {
-            case BackendType.AmazonS3:
-                backendInstance = new AmazonS3Backend(options);
-                break;
-            case BackendType.FileSystem:
-            default:
-                backendInstance = new FileSystemBackend(options);
-                break;
-        }
-    }
-    return middleware;
+  }
+  return (req, res, next) => {
+    req.dutyfree = backendInstance;
+    next();
+  };
 };
 
-exports.fileSystem = require('./fileSystem');
-exports.amazonS3 = require('./amazonS3');
+exports.fileSystem = FileSystemBackend;
+exports.amazonS3 = AmazonS3Backend;

@@ -1,3 +1,3 @@
 
-exports.FileSystem = 1;
-exports.AmazonS3 = 2;
+exports.FileSystem = 'FileSystem';
+exports.AmazonS3 = 'AmazonS3';
