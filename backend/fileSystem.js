@@ -8,18 +8,13 @@ const {
   verifyHash,
 } = require('../utils').encryption;
 
-const DEFAULT_STALE_AGE = 1000 * 60 * 5; // Cache for 5 minutes
-const DEFAULT_USERS_PATH = path.join(__dirname, '../__data/users.json');
-const DEFAULT_METADATA_PATH = path.join(__dirname, '../__data/metadata.json');
-const DEFAULT_TARBALL_DIR = path.join(__dirname, '../__tarballs');
-
 class FileSystemBackend {
   constructor(options = {}) {
-    this.metadataPath = options.metadataPath || DEFAULT_METADATA_PATH;
-    this.usersPath = options.usersPath || DEFAULT_USERS_PATH;
-    this.tarballDir = options.tarballDir || DEFAULT_TARBALL_DIR;
-    this.stale = options.stale || DEFAULT_STALE_AGE;
-    this.maxPackageSearchResults = options.search.maxResults || 100;
+    this.metadataPath = options.metadataPath;
+    this.usersPath = options.usersPath;
+    this.tarballDir = options.tarballDir;
+    this.stale = options.stale;
+    this.maxPackageSearchResults = options.search.maxResults;
 
     this._users = null;
     this._lastUsersAccessTime = null;

@@ -11,7 +11,7 @@ const dutyfreeBackend = require('./backend');
 const routes = require('./routes');
 const logger = require('./logger');
 
-function setup(backendType, config = {}) {
+function setup(config = {}) {
   const server = express();
   server.use(morgan(':user-agent - :remote-addr - :remote-user [:date[clf]] ":method :url HTTP/:http-version" :status :res[content-length]'));
   server.use(cors());
@@ -24,7 +24,7 @@ function setup(backendType, config = {}) {
       return !req.headers['x-no-compress'];
     },
   }));
-  server.use(dutyfreeBackend.init(backendType, config.dutyfree));
+  server.use(dutyfreeBackend.init(config.dutyfree));
   server.use(express.static(path.join(__dirname, '/pages'), {
     maxAge: config.server.cache.maxAge,
   }));
