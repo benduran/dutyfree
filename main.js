@@ -1,6 +1,5 @@
 
 const program = require('commander');
-const extend = require('deep-extend');
 
 const { version } = require('./package.json');
 const config = require('./config');
@@ -12,29 +11,29 @@ process.on('uncaughtException', (error) => {
 });
 
 function serve(options = {}) {
-  const mappedConfig = extend({}, {
-    env: options.env,
+  const mappedConfig = {
+    env: options.env || config.env,
     server: {
-      port: options.port,
-      host: options.host,
+      port: options.port || config.server.port,
+      host: options.host || config.server.host,
       cache: {
-        maxAge: options.maxAge,
+        maxAge: typeof options.maxAge !== 'undefined' ? +options.maxMage : config.server.cache.maxAge,
       },
     },
     dutyfree: {
-      backend: options.backend,
-      stale: options.stale,
-      metadataPath: options.metadataPath,
-      usersPath: options.usersPath,
-      tarballDir: options.tarballDir,
+      backend: options.backend || config.dutyfree.backend,
+      stale: options.stale || config.dutyfree.stale,
+      metadataPath: options.metadataPath || config.dutyfree.metadataPath,
+      usersPath: options.usersPath || config.dutyfree.usersPath,
+      tarballDir: options.tarballDir || config.dutyfree.tarballDir,
       registry: {
-        fallback: options.fallback,
+        fallback: options.fallback || config.dutyfree.registry.fallback,
       },
       search: {
-        maxResults: options.maxResults,
+        maxResults: typeof options.maxResults !== 'undefined' ? +options.maxResults : config.dutyfree.search.maxResults,
       },
     },
-  }, config);
+  };
   server(mappedConfig);
 }
 
@@ -43,6 +42,7 @@ program
   .description('DutyFree: A lightweight, private, locally-installable NPM registry.');
 
 program
+  .command('serve')
   .option('-p, --port [port]', 'Port on which dutyfree will listen for connections.', config.server.port)
   .option('-h, --host [host]', 'Hostname on which dutyfree will listen for connections.', config.server.host)
   .option('-m, --maxAge [maxAge]', 'Max static cache file age.', config.server.cache)
@@ -54,7 +54,6 @@ program
   .option('--metadataPath [metadataPath]', 'Path to where package metadata JSON file is store in the FileSystem backend', config.dutyfree.metadataPath)
   .option('--tarballDir [tarballDir]', 'Path to where the tarballs are stored in the FileSystem backend', config.dutyfree.tarballDir)
   .option('--usersPath [usersPath]', 'Path to where users metadata JSON file is store in the FileSystem backend', config.dutyfree.usersPath)
-  .command('serve')
   .description('Launches the dutyfree server.')
   .action(serve);
 
