@@ -1,12 +1,12 @@
 
-const {Router} = require('express');
+const { Router } = require('express');
 
-const app = require('./app');
+const webApp = require('./webApp');
 const npm = require('./npm');
 
 module.exports = function () {
-    const router = new Router();
-    app.bind(router);
-    npm.bind(router);
-    return router;
+  const router = new Router();
+  webApp.bind(router);
+  npm.bind(router);
+  return router;
 };

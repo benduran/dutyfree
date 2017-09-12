@@ -1,4 +1,5 @@
 
 exports.userController = require('./user');
 exports.packageController = require('./package');
-exports.packagesController = require('./web-api');
+exports.webApiController = require('./webApi');
+exports.webAppController = require('./webApp');

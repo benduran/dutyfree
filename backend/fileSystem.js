@@ -147,95 +147,25 @@ class FileSystemBackend {
     const match = await this.getPackageByName(packageName);
     return match ? match.versions[version] : null;
   }
-  async searchPackages(properties) {
+  async searchPackages(query, searchDescription = true) {
     // Retrieve listing of all packages
     await this.syncMetadata();
+    // Flatten packages into array
     const packages = Object.keys(this._metadata).map(key => this._metadata[key]);
-
-    // Begin with all packages
-    let result = packages;
-
-    // Filter by search query
-    if (
-      typeof properties.query === 'string' &&
-      properties.query.length > 0 &&
-      properties.property.length > 0
-    ) {
-      // Set options for searching using sane magic numbers that shouldn't likely need customization
-      const options = {
-        threshold: 0.6,
-        maxPatternLength: 32,
-        shouldSort: true,
-        keys: properties.property,
-      };
-
-      // If only searching for names, it's possible to more efficiently search the whole package array
-      if (properties.property.length === 1 && properties.property[0] === 'name') {
-        // Perform search for the query in the package array
-        const fuse = new Fuse(packages, options);
-        result = fuse.search(properties.query);
-      }
-
-      // If doing an advanced search with additional properties, make a new object of package properties
-      else {
-        // Extract searchable properties
-        const searchProperties = packages.map((pack) => {
-          // Get latest
-          const latest = pack.versions[pack['dist-tags'].latest];
-
-          // Return selected properties
-          return {
-            name: pack.name,
-            description: latest.description || pack.description,
-            author: latest._npmUser.name,
-            readme: latest.readme || pack.readme,
-            keywords: latest.keywords,
-          };
-        });
-
-        // Perform search for the query in the package array
-        const fuse = new Fuse(searchProperties, options);
-        const searchResults = fuse.search(properties.query);
-
-        // Translate searchable properties object back into the original packages
-        result = searchResults.map((searchResult) => {
-          for (let i = 0; i < result.length; i++) {
-            if (searchResult.name === result[i].name) return result[i];
-          }
-          return null;
-        });
-      }
+    const searchKeys = ['name'];
+    if (searchDescription) {
+      searchKeys.push('description');
     }
-
-    // Filter by author
-    if (typeof properties.author === 'string' && properties.author.length > 0) {
-      result = result.filter((pack) => {
-        const latestVersionNumber = pack['dist-tags'].latest;
-        const latest = pack.versions[latestVersionNumber];
-        return latest._npmUser.name.toLowerCase() === properties.author.toLowerCase();
-      });
-    }
-
-    // Sort by recent
-    if (properties.sort === 'recent') {
-      result = result.sort((a, b) => {
-        const aLatestTime = a.time[a['dist-tags'].latest];
-        const bLatestTime = b.time[b['dist-tags'].latest];
-
-        return Date.parse(bLatestTime) - Date.parse(aLatestTime);
-      });
-    }
-
-    // Sanitize the start value
-    const startingValue = Math.max(properties.start || 0, 0);
-
-    // Sanitize the amount value
-    let resultsToReturn = Math.max(properties.amount || this.maxPackageSearchResults, 0);
-    if (!resultsToReturn) resultsToReturn = this.maxPackageSearchResults;
-    resultsToReturn = Math.min(resultsToReturn, this.maxPackageSearchResults);
-
-    // Return the requested number of results capped at the program's overall limit
-    return result.slice(startingValue, startingValue + resultsToReturn);
+    const fuseOptions = {
+      findAllMatches: true,
+      shouldSort: true,
+      threshold: 0.6, // Used to determine which weighted items get filtered out (anything below matches...0 is perfect, 1 is total mismatch)
+      includeScore: true,
+      distance: 1000, // How many character away from the "location" the text needs to be matched
+      keys: searchKeys,
+    };
+    const f = new Fuse(packages, fuseOptions);
+    return f.search(query);
   }
   async publishPackage(packageName, version, metadata, tarballName, tarballBuffer, massageMetadata) {
     await this.syncMetadata();
